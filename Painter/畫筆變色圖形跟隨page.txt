@@ -1,0 +1,129 @@
+package EASY;
+
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+public class Page extends Panel {
+    State state;
+    FillType type = FillType.hollow;
+
+    Point p1, p2, p0;
+
+    Color c1 = Color.WHITE;
+    Color c = ColorBT.c;
+
+    boolean firstTime = true;
+
+    DrawType drawType;
+
+    Page() {
+        this.setLayout(null);
+        this.setBackground(Color.white);
+
+        this.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (Page.this.state == State.readydraw)
+                    Page.this.state = State.drawing;
+
+                p1 = e.getPoint();
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                if (Page.this.state == State.drawing) {
+                    Graphics g = Page.this.getGraphics();
+                    //g.setXORMode(new Color(255, 0, 255));
+                    if (    (Page.this.drawType == DrawType.line) ||
+                            (Page.this.drawType == DrawType.rectangle)||
+                            (Page.this.drawType == DrawType.oval)||
+                            (Page.this.drawType == DrawType.eraser)) {
+                        //Page.this.drawSomething(g, p1, p0);
+                        drawSomething(g, p1, p0);
+                    }
+
+                    p1 = p2 = p0 = null;
+                    firstTime = true;
+                }
+            }
+
+        });
+
+        this.addMouseMotionListener(new MouseAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                if (Page.this.state == State.drawing) {
+                    p2 = e.getPoint();
+                    Graphics g = Page.this.getGraphics();
+                    g.setXORMode(c1);
+
+                    if (drawType == DrawType.pen){
+                        g.setColor(c);
+                        drawSomething(g,p1,p2);
+                        g.drawLine(p1.x,p1.y,p2.x,p2.y);
+                        p1 = p2;
+                    }
+
+                    if (!firstTime) {
+                        //Page.this.drawSomething(g, p1, p0);
+                        drawSomething(g, p1, p0);
+                    } else {
+                        firstTime = false;
+                    }
+                    //Page.this.drawSomething(g, p1, p2);
+                    drawSomething(g, p1, p2);
+                    p0 = p2;
+                }
+            }
+        });
+    }
+
+    public void drawSomething(Graphics g, Point p1, Point p2) {
+        int x, y, w, h;
+
+        if ((p1.x <= p2.x) && (p1.y >= p2.y)) {
+            x = p1.x;
+            y = p2.y;
+            w = p2.x - p1.x;
+            h = p1.y - p2.y;
+        }
+        else if ((p1.x > p2.x) && (p1.y > p2.y)) {
+            x = p2.x;
+            y = p2.y;
+            w = p1.x - p2.x;
+            h = p1.y - p2.y;
+        }
+        else if ((p1.x >= p2.x) && (p1.y <= p2.y)) {
+            x = p2.x;
+            y = p1.y;
+            w = p1.x - p2.x;
+            h = p2.y - p1.y;
+        }
+        else {
+            x = p1.x;
+            y = p1.y;
+            w = p2.x - p1.x;
+            h = p2.y - p1.y;
+        }
+
+        g.setColor(c);
+        if (drawType == DrawType.line)
+            g.drawLine(p1.x, p1.y, p2.x, p2.y);
+        else if (drawType == DrawType.rectangle) {
+            if (type == FillType.hollow)
+                g.drawRect(x, y, w, h);
+            else if (Page.this.type == FillType.fill)
+                g.fillRect(x, y, w, h);
+        }
+        else if (drawType == DrawType.oval) {
+            if (type == FillType.hollow)
+                g.drawOval(x, y, w, h);
+            else if (type == FillType.fill)
+                g.fillOval(x, y, w, h);
+        }
+        else if (drawType == DrawType.eraser) {
+            g.clearRect(x,y,w,h);
+        }
+        else if (drawType == DrawType.pen) {
+            g.drawLine(p1.x,p1.y,p2.x,p2.y);
+        }
+    }
+}
